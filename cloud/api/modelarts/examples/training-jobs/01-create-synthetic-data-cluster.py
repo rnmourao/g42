@@ -99,6 +99,5 @@ for quote in quotes:
             error = random.choice(errors)
             annotated = annotated.replace(*error)
         hea_file.write(f"{word},{annotated},{','.join(hot_encode_word(annotated))}" + "\n")
-        com_file.write(f'{word},{annotated}' + '\n')
 
 hea_file.close() 
