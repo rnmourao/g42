@@ -63,7 +63,7 @@ for d in data:
 quotes = list(set(quotes))
 
 # create a csv files
-hea_file = open('data/samples/hot-encoded-annotations.csv', 'w')
+hea_file = open('data/hot-encoded-annotations.csv', 'w')
 
 for quote in quotes:
     # clean text
