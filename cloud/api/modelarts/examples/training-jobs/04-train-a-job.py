@@ -2,9 +2,11 @@ import requests
 import json
 import datetime
 import getpass
+from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkcore.sdk_request import SdkRequest
 
 
-# get credentials
+# get credentials for ModelArts
 def get_token(domain_name="", project_id=None):
     if project_id:
         filename = '.project-credentials'
@@ -193,7 +195,7 @@ if __name__ == "__main__":
     import pprint
 
 
-    # getting project_id
+    # get project_id
     domain_name = input("Informe your G42 Cloud domain name: ")
     domain_token = get_token(domain_name=domain_name)
     projects = get_projects(domain_token)["projects"]
@@ -201,7 +203,7 @@ if __name__ == "__main__":
         if project["name"] == "ae-ad-1":
             project_id = project["id"]
 
-    # getting token for project
+    # get token for project
     token = get_token(domain_name, project_id)
 
     # TODO create OBS folders
