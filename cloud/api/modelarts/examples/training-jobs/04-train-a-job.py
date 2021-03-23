@@ -4,10 +4,11 @@ import datetime
 import getpass
 from huaweicloudsdkcore.auth.credentials import BasicCredentials
 from huaweicloudsdkcore.sdk_request import SdkRequest
+import uuid
 
 
 # get credentials for ModelArts
-def get_token(domain_name="", project_id=None):
+def get_token(domain_name="", project_id=None, user="", password=""):
     if project_id:
         filename = '.project-credentials'
         scope = {
@@ -34,8 +35,10 @@ def get_token(domain_name="", project_id=None):
             raise Exception("Token expired.")
 
     except Exception:
-        user = input("Username: ")
-        password = getpass.getpass("Password: ")
+        if not user:
+            user = input("Username: ")
+        if not password:
+            password = getpass.getpass("Password: ")
 
         url = "https://iam.ae-ad-1.g42cloud.com/v3/auth/tokens"
         headers = {"Content-Type": "application/json;charset=utf8"}
@@ -194,17 +197,20 @@ def get_job_details(project_id, token, job_id, version_id):
 if __name__ == "__main__":
     import pprint
 
+    # get user's information
+    domain_name = input("Informe your G42 Cloud domain name: ")
+    user = input("Username: ")
+    password = getpass.getpass("Password: ")
 
     # get project_id
-    domain_name = input("Informe your G42 Cloud domain name: ")
-    domain_token = get_token(domain_name=domain_name)
+    domain_token = get_token(domain_name=domain_name, user=user, password=password)
     projects = get_projects(domain_token)["projects"]
     for project in projects:
         if project["name"] == "ae-ad-1":
             project_id = project["id"]
 
     # get token for project
-    token = get_token(domain_name, project_id)
+    token = get_token(domain_name, project_id, user=user, password=password)
 
     # TODO create OBS folders
     
@@ -224,9 +230,10 @@ if __name__ == "__main__":
             engine_id = engine["engine_id"]
 
     # run training job
+    uid = uuid.uuid1()
     job = submit_job(project_id, 
                     token, 
-                    name="train-with-api", 
+                    name=f"train-with-api-{uid}", 
                     spec_id=spec_id, 
                     engine_id=engine_id, 
                     worker_server_num=worker_server_num)
