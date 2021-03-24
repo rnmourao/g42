@@ -2,9 +2,8 @@ import requests
 import json
 import datetime
 import getpass
-from huaweicloudsdkcore.auth.credentials import BasicCredentials
-from huaweicloudsdkcore.sdk_request import SdkRequest
 import uuid
+from obs import ObsClient
 
 
 # get credentials for ModelArts
@@ -196,11 +195,19 @@ def get_job_details(project_id, token, job_id, version_id):
 
 if __name__ == "__main__":
     import pprint
+    
+    
+    # generate unique id for the execution
+    uid = uuid.uuid1()
 
-    # get user's information
+    # get user information
     domain_name = input("Informe your G42 Cloud domain name: ")
     user = input("Username: ")
     password = getpass.getpass("Password: ")
+    AK = '*** Provide your Access Key ***'
+    SK = '*** Provide your Secret Key ***'
+    server = "https://obs.ae-ad-1.g42cloud.com"
+    bucket_name = "roberto-public-read"
 
     # get project_id
     domain_token = get_token(domain_name=domain_name, user=user, password=password)
@@ -212,9 +219,24 @@ if __name__ == "__main__":
     # get token for project
     token = get_token(domain_name, project_id, user=user, password=password)
 
-    # TODO create OBS folders
-    
-    # TODO upload script and data to OBS
+    # Constructs a obs client instance with your account for accessing OBS
+    obs_client = ObsClient(access_key_id=AK, secret_access_key=SK, server=server)
+    bucket_client = obs_client.bucketClient(bucket_name)
+
+    # create OBS folders
+    code_folder = f"{uid}/code/"
+    obs_client.putContent(bucket_name, code_folder, '')
+    data_folder = f"{uid}/data/"
+    obs_client.putContent(bucket_name, data_folder, '')
+    model_folder = f"{uid}/model/"
+    obs_client.putContent(bucket_name, model_folder, '')
+
+    # upload script and data to OBS
+    train_file = code_folder + "train.py"
+    obs_client.putFile(bucket_name, train_file, "03-detect-annotation-anomalies.py")
+
+    data_file = data_folder + "kindness.csv"
+    obs_client.putFile(bucket_name, data_file, "data/kindness.csv")
 
     # get resources specifications
     resources = get_resources(project_id, token)["specs"]
@@ -230,7 +252,6 @@ if __name__ == "__main__":
             engine_id = engine["engine_id"]
 
     # run training job
-    uid = uuid.uuid1()
     job = submit_job(project_id, 
                     token, 
                     name=f"train-with-api-{uid}", 
@@ -244,3 +265,4 @@ if __name__ == "__main__":
     pprint.pprint(get_job_details(project_id, token, job_id, version_id))
     
     # TODO download the result file
+    obs_client.downloadFile(bucket_name, data_folder + "evaluation.csv", "data/evaluation.csv")
